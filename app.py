@@ -1,4 +1,6 @@
+
 import os
+from pathlib import Path
 
 from fastapi import FastAPI, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -27,62 +29,75 @@ from investigation_database import (
 )
 
 
+# =========================================================
+# PATHS
+# =========================================================
+
+BASE_DIR = Path(__file__).resolve().parent
+
+TEMPLATES_DIR = BASE_DIR / "templates"
+STATIC_DIR = BASE_DIR / "static"
+
+
+# =========================================================
+# FASTAPI APPLICATION
+# =========================================================
+
 app = FastAPI(
     title="Business Transaction Anomaly Investigation Platform"
 )
 
 
-# --------------------------------------------------
-# PROJECT DIRECTORIES
-# --------------------------------------------------
-
-BASE_DIR = os.path.dirname(
-    os.path.abspath(__file__)
-)
-
-STATIC_DIR = os.path.join(
-    BASE_DIR,
-    "static"
-)
-
-TEMPLATES_DIR = os.path.join(
-    BASE_DIR,
-    "templates"
-)
-
-
-# --------------------------------------------------
+# =========================================================
 # TEMPLATES
-# --------------------------------------------------
+# =========================================================
 
 templates = Jinja2Templates(
-    directory=TEMPLATES_DIR
+    directory=str(TEMPLATES_DIR)
 )
 
 
-# --------------------------------------------------
+# =========================================================
 # STATIC FILES
-# --------------------------------------------------
+# =========================================================
 
+# Make sure the static directory exists.
+STATIC_DIR.mkdir(
+    parents=True,
+    exist_ok=True
+)
+
+# Mount CSS, JavaScript and other static files.
 app.mount(
     "/static",
-    StaticFiles(
-        directory=STATIC_DIR
-    ),
+    StaticFiles(directory=str(STATIC_DIR)),
     name="static"
 )
 
 
-# --------------------------------------------------
+# =========================================================
 # DATABASE INITIALIZATION
-# --------------------------------------------------
+# =========================================================
 
 initialize_investigation_database()
 
 
-# --------------------------------------------------
+# =========================================================
+# HEALTH CHECK
+# =========================================================
+
+@app.get(
+    "/health",
+    response_class=HTMLResponse
+)
+def health_check():
+
+    return "OK"
+
+
+# =========================================================
 # ANALYZE PAYMENTS
-# --------------------------------------------------
+# =========================================================
 
 def get_analyzed_payments():
 
@@ -106,24 +121,26 @@ def get_analyzed_payments():
     return df
 
 
-# --------------------------------------------------
+# =========================================================
 # DASHBOARD
-# --------------------------------------------------
+# =========================================================
 
 @app.get(
     "/",
     response_class=HTMLResponse,
     name="dashboard"
 )
-def dashboard(request: Request):
+def dashboard(
+    request: Request
+):
 
     df = get_analyzed_payments()
 
     total_transactions = len(df)
 
-    # ----------------------------------------------
+    # -----------------------------------------------------
     # Amount anomalies
-    # ----------------------------------------------
+    # -----------------------------------------------------
 
     amount_anomalies = 0
 
@@ -132,12 +149,13 @@ def dashboard(request: Request):
         amount_anomalies = int(
             df["amount_anomaly"]
             .fillna(False)
+            .astype(bool)
             .sum()
         )
 
-    # ----------------------------------------------
+    # -----------------------------------------------------
     # ML anomalies
-    # ----------------------------------------------
+    # -----------------------------------------------------
 
     ml_anomalies = 0
 
@@ -146,12 +164,13 @@ def dashboard(request: Request):
         ml_anomalies = int(
             df["ml_anomaly"]
             .fillna(False)
+            .astype(bool)
             .sum()
         )
 
-    # ----------------------------------------------
+    # -----------------------------------------------------
     # Risk levels
-    # ----------------------------------------------
+    # -----------------------------------------------------
 
     high_risk = 0
     medium_risk = 0
@@ -159,60 +178,88 @@ def dashboard(request: Request):
 
     if "risk_level" in df.columns:
 
+        risk_values = (
+            df["risk_level"]
+            .fillna("")
+            .astype(str)
+            .str.upper()
+        )
+
         high_risk = int(
-            (df["risk_level"] == "HIGH").sum()
+            (risk_values == "HIGH").sum()
         )
 
         medium_risk = int(
-            (df["risk_level"] == "MEDIUM").sum()
+            (risk_values == "MEDIUM").sum()
         )
 
         low_risk = int(
-            (df["risk_level"] == "LOW").sum()
+            (risk_values == "LOW").sum()
         )
 
-    # ----------------------------------------------
+    # -----------------------------------------------------
     # Flagged transactions
-    # ----------------------------------------------
+    # -----------------------------------------------------
 
     flagged_transactions = 0
 
     if "anomaly_score" in df.columns:
 
-        flagged_transactions = int(
-            (df["anomaly_score"] > 0).sum()
+        anomaly_scores = (
+            df["anomaly_score"]
+            .fillna(0)
         )
 
-    # ----------------------------------------------
+        flagged_transactions = int(
+            (anomaly_scores > 0).sum()
+        )
+
+    # -----------------------------------------------------
     # Render dashboard
-    # ----------------------------------------------
+    # -----------------------------------------------------
 
     return templates.TemplateResponse(
-        request,
-        "dashboard.html",
-        {
+        request=request,
+        name="dashboard.html",
+        context={
             "request": request,
-            "total_transactions": total_transactions,
-            "total_anomalies": amount_anomalies,
-            "ml_anomalies": ml_anomalies,
-            "flagged_transactions": flagged_transactions,
-            "high_risk": high_risk,
-            "medium_risk": medium_risk,
-            "low_risk": low_risk
+
+            "total_transactions":
+                total_transactions,
+
+            "total_anomalies":
+                amount_anomalies,
+
+            "ml_anomalies":
+                ml_anomalies,
+
+            "flagged_transactions":
+                flagged_transactions,
+
+            "high_risk":
+                high_risk,
+
+            "medium_risk":
+                medium_risk,
+
+            "low_risk":
+                low_risk
         }
     )
 
 
-# --------------------------------------------------
+# =========================================================
 # TRANSACTIONS
-# --------------------------------------------------
+# =========================================================
 
 @app.get(
     "/transactions",
     response_class=HTMLResponse,
     name="transactions"
 )
-def transactions(request: Request):
+def transactions(
+    request: Request
+):
 
     df = get_analyzed_payments()
 
@@ -221,18 +268,18 @@ def transactions(request: Request):
     )
 
     return templates.TemplateResponse(
-        request,
-        "transactions.html",
-        {
+        request=request,
+        name="transactions.html",
+        context={
             "request": request,
             "transactions": transactions_data
         }
     )
 
 
-# --------------------------------------------------
-# INVESTIGATION DETAILS
-# --------------------------------------------------
+# =========================================================
+# INVESTIGATION PAGE
+# =========================================================
 
 @app.get(
     "/investigation/{transaction_id}",
@@ -258,7 +305,10 @@ def investigation(
             detail="Transaction not found"
         )
 
-    transaction = matching.iloc[0].to_dict()
+    transaction = (
+        matching.iloc[0]
+        .to_dict()
+    )
 
     existing_investigation = (
         get_investigation_by_transaction(
@@ -270,35 +320,45 @@ def investigation(
 
     if existing_investigation:
 
-        evidence = get_investigation_evidence(
-            existing_investigation[
-                "investigation_id"
-            ]
+        evidence = (
+            get_investigation_evidence(
+                existing_investigation[
+                    "investigation_id"
+                ]
+            )
         )
 
     return templates.TemplateResponse(
-        request,
-        "investigation.html",
-        {
+        request=request,
+        name="investigation.html",
+        context={
             "request": request,
             "transaction": transaction,
-            "investigation": existing_investigation,
-            "evidence": evidence
+            "investigation":
+                existing_investigation,
+            "evidence":
+                evidence
         }
     )
 
 
-# --------------------------------------------------
+# =========================================================
 # CREATE INVESTIGATION
-# --------------------------------------------------
+# =========================================================
 
 @app.post(
     "/investigation/{transaction_id}/create"
 )
 def create_investigation_route(
     transaction_id: str,
-    investigator: str = Form("Investigator 1"),
-    priority: str = Form("Medium")
+
+    investigator: str = Form(
+        "Investigator 1"
+    ),
+
+    priority: str = Form(
+        "Medium"
+    )
 ):
 
     df = get_analyzed_payments()
@@ -315,7 +375,14 @@ def create_investigation_route(
             detail="Transaction not found"
         )
 
-    transaction = matching.iloc[0].to_dict()
+    transaction = (
+        matching.iloc[0]
+        .to_dict()
+    )
+
+    # -----------------------------------------------------
+    # Build investigation
+    # -----------------------------------------------------
 
     investigation = build_investigation(
         transaction,
@@ -323,21 +390,41 @@ def create_investigation_route(
         priority=priority
     )
 
+    # -----------------------------------------------------
+    # Save investigation
+    # -----------------------------------------------------
+
     investigation_id = save_investigation(
         investigation
     )
 
-    if investigation.get("anomaly_reasons"):
+    # -----------------------------------------------------
+    # Save anomaly reasons as evidence
+    # -----------------------------------------------------
+
+    if investigation.get(
+        "anomaly_reasons"
+    ):
 
         for reason in investigation[
             "anomaly_reasons"
         ]:
 
             evidence = {
-                "evidence_type": "Anomaly Detection",
-                "description": reason,
-                "reference": transaction_id,
-                "added_at": investigation["created_at"]
+
+                "evidence_type":
+                    "Anomaly Detection",
+
+                "description":
+                    reason,
+
+                "reference":
+                    transaction_id,
+
+                "added_at":
+                    investigation[
+                        "created_at"
+                    ]
             }
 
             save_all_evidence(
@@ -351,15 +438,16 @@ def create_investigation_route(
     )
 
 
-# --------------------------------------------------
+# =========================================================
 # ADD INVESTIGATION NOTE
-# --------------------------------------------------
+# =========================================================
 
 @app.post(
     "/investigation/{transaction_id}/note"
 )
 def add_note_route(
     transaction_id: str,
+
     note: str = Form("")
 ):
 
@@ -378,9 +466,11 @@ def add_note_route(
 
     if note.strip():
 
-        investigation = add_investigation_note(
-            investigation,
-            note
+        investigation = (
+            add_investigation_note(
+                investigation,
+                note
+            )
         )
 
         update_investigation(
@@ -393,15 +483,16 @@ def add_note_route(
     )
 
 
-# --------------------------------------------------
+# =========================================================
 # UPDATE INVESTIGATION STATUS
-# --------------------------------------------------
+# =========================================================
 
 @app.post(
     "/investigation/{transaction_id}/status"
 )
 def update_status_route(
     transaction_id: str,
+
     status: str = Form(...)
 ):
 
@@ -420,9 +511,11 @@ def update_status_route(
 
     try:
 
-        investigation = update_investigation_status(
-            investigation,
-            status
+        investigation = (
+            update_investigation_status(
+                investigation,
+                status
+            )
         )
 
         update_investigation(
@@ -442,17 +535,22 @@ def update_status_route(
     )
 
 
-# --------------------------------------------------
+# =========================================================
 # ADD EVIDENCE
-# --------------------------------------------------
+# =========================================================
 
 @app.post(
     "/investigation/{transaction_id}/evidence"
 )
 def add_evidence_route(
     transaction_id: str,
-    evidence_type: str = Form("Observation"),
+
+    evidence_type: str = Form(
+        "Observation"
+    ),
+
     description: str = Form(""),
+
     reference: str = Form("")
 ):
 
@@ -471,8 +569,11 @@ def add_evidence_route(
 
     investigation = add_evidence(
         investigation,
+
         evidence_type=evidence_type,
+
         description=description,
+
         reference=reference
     )
 
@@ -481,7 +582,9 @@ def add_evidence_route(
     )
 
     save_all_evidence(
-        investigation["investigation_id"],
+        investigation[
+            "investigation_id"
+        ],
         [new_evidence]
     )
 
@@ -495,15 +598,16 @@ def add_evidence_route(
     )
 
 
-# --------------------------------------------------
+# =========================================================
 # SET INVESTIGATION OUTCOME
-# --------------------------------------------------
+# =========================================================
 
 @app.post(
     "/investigation/{transaction_id}/outcome"
 )
 def set_outcome_route(
     transaction_id: str,
+
     outcome: str = Form(...)
 ):
 
@@ -522,9 +626,11 @@ def set_outcome_route(
 
     try:
 
-        investigation = set_investigation_outcome(
-            investigation,
-            outcome
+        investigation = (
+            set_investigation_outcome(
+                investigation,
+                outcome
+            )
         )
 
         update_investigation(
@@ -544,9 +650,9 @@ def set_outcome_route(
     )
 
 
-# --------------------------------------------------
+# =========================================================
 # LOCAL DEVELOPMENT
-# --------------------------------------------------
+# =========================================================
 
 if __name__ == "__main__":
 
@@ -560,7 +666,9 @@ if __name__ == "__main__":
     )
 
     uvicorn.run(
-        app,
+        "app:app",
         host="0.0.0.0",
-        port=port
+        port=port,
+        reload=False
     )
+
