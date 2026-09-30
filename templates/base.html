@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
 
     <meta
@@ -11,78 +10,188 @@
     >
 
     <title>
-        Business Transaction Anomaly Investigation Platform
+        FIN-41 | Transaction Investigation Platform
     </title>
 
     <link
         rel="stylesheet"
         href="{{ url_for('static', filename='style.css') }}"
     >
-
 </head>
 
 <body>
 
-    <!-- Navigation -->
+<div class="app-layout">
 
-    <nav class="navbar">
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
 
-        <div class="brand">
+    <aside class="sidebar">
 
-            <div class="brand-icon">
+        <div class="sidebar-brand">
+
+            <div class="brand-mark">
                 FIN
             </div>
 
-            <div>
-                <div class="brand-name">
-                    Business Transaction Anomaly
-                </div>
+            <div class="brand-text">
 
-                <div class="brand-subtitle">
+                <strong>
+                    FIN-41
+                </strong>
+
+                <span>
                     Investigation Platform
-                </div>
+                </span>
+
             </div>
 
         </div>
 
 
-        <div class="nav-links">
+        <nav class="sidebar-nav">
+
+            <div class="nav-section-title">
+                MONITORING
+            </div>
 
             <a
                 href="{{ url_for('dashboard') }}"
-                class="nav-link"
+                class="sidebar-link"
             >
-                Dashboard
+                <span class="nav-icon">D</span>
+                <span>Dashboard</span>
             </a>
+
 
             <a
                 href="{{ url_for('transactions') }}"
-                class="nav-link"
+                class="sidebar-link"
             >
-                Transactions
+                <span class="nav-icon">T</span>
+                <span>Transactions</span>
             </a>
+
+
+            <div class="nav-section-title">
+                INVESTIGATION
+            </div>
+
+            <a
+                href="{{ url_for('transactions') }}"
+                class="sidebar-link"
+            >
+                <span class="nav-icon">A</span>
+                <span>Anomalies</span>
+            </a>
+
+
+            <a
+                href="{{ url_for('transactions') }}"
+                class="sidebar-link"
+            >
+                <span class="nav-icon">I</span>
+                <span>Investigations</span>
+            </a>
+
+
+            <div class="nav-section-title">
+                DATA
+            </div>
+
+            <a
+                href="{{ url_for('transactions') }}"
+                class="sidebar-link"
+            >
+                <span class="nav-icon">DB</span>
+                <span>Data Explorer</span>
+            </a>
+
+        </nav>
+
+
+        <!-- System status -->
+
+        <div class="sidebar-status">
+
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+
+                <span>
+                    System Active
+                </span>
+            </div>
+
+            <small>
+                Transaction monitoring enabled
+            </small>
 
         </div>
 
-    </nav>
+    </aside>
 
 
-    <!-- Main content -->
+    <!-- =====================================================
+         MAIN APPLICATION
+    ====================================================== -->
 
-    <main class="main-container">
+    <div class="main-area">
 
-        {% block content %}
+        <!-- Top bar -->
 
-        {% endblock %}
+        <header class="topbar">
 
-    </main>
+            <div class="topbar-title">
+
+                <span class="topbar-label">
+                    FINANCIAL MONITORING
+                </span>
+
+                <span class="topbar-divider">
+                    /
+                </span>
+
+                <span>
+                    Investigation Platform
+                </span>
+
+            </div>
 
 
-    <script
-        src="{{ url_for('static', filename='script.js') }}"
-    ></script>
+            <div class="topbar-status">
+
+                <span class="status-dot"></span>
+
+                <span>
+                    Monitoring Active
+                </span>
+
+            </div>
+
+        </header>
+
+
+        <!-- Page content -->
+
+        <main class="main-container">
+
+            {% block content %}
+            {% endblock %}
+
+        </main>
+
+    </div>
+
+</div>
+
+
+<script
+    src="{{ url_for('static', filename='script.js') }}"
+></script>
 
 </body>
 
 </html>
+
 

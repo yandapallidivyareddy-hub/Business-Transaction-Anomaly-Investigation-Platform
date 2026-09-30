@@ -1,176 +1,908 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Transaction Analysis</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f6f9;
+            color: #1f2937;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1600px;
+            margin: 30px auto;
+        }
+
+        .header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #6b7280;
+        }
+
+        .toolbar {
+            background: white;
+            padding: 18px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-box input:focus {
+            border-color: #4f46e5;
+        }
+
+        select {
+            padding: 12px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1300px;
+        }
+
+        thead {
+            background: #111827;
+            color: white;
+        }
+
+        th {
+            padding: 15px 12px;
+            text-align: left;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+            vertical-align: top;
+        }
+
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .transaction-id {
+            font-weight: 600;
+            color: #4f46e5;
+        }
+
+        .client-name {
+            font-weight: 600;
+        }
+
+        .amount {
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* -------------------------------------------------
+           SCORE
+        ------------------------------------------------- */
+
+        .score {
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .score-bar {
+            width: 100px;
+            height: 7px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        /* -------------------------------------------------
+           RISK BADGES
+        ------------------------------------------------- */
+
+        .risk-badge {
+            display: inline-block;
+            padding: 6px 11px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .risk-low {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .risk-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .risk-high {
+            background: #ffedd5;
+            color: #9a3412;
+        }
+
+        .risk-critical {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* -------------------------------------------------
+           ML BADGE
+        ------------------------------------------------- */
+
+        .ml-anomaly {
+            color: #b91c1c;
+            font-weight: 700;
+        }
+
+        .ml-normal {
+            color: #15803d;
+            font-weight: 700;
+        }
+
+        /* -------------------------------------------------
+           SIGNALS
+        ------------------------------------------------- */
+
+        .signals {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            max-width: 220px;
+        }
+
+        .signal {
+            padding: 4px 7px;
+            border-radius: 5px;
+            background: #f3f4f6;
+            color: #6b7280;
+            font-size: 10px;
+        }
+
+        .signal.active {
+            background: #fee2e2;
+            color: #b91c1c;
+            font-weight: 600;
+        }
+
+        /* -------------------------------------------------
+           REASONS
+        ------------------------------------------------- */
+
+        .reason-list {
+            max-width: 320px;
+        }
+
+        .reason {
+            margin-bottom: 5px;
+            color: #4b5563;
+            line-height: 1.4;
+        }
+
+        /* -------------------------------------------------
+           ACTION
+        ------------------------------------------------- */
+
+        .investigate-btn {
+            display: inline-block;
+            padding: 9px 13px;
+            background: #4f46e5;
+            color: white;
+            text-decoration: none;
+            border-radius: 7px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .investigate-btn:hover {
+            background: #3730a3;
+        }
+
+        .empty {
+            padding: 50px;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .footer-info {
+            padding: 15px 20px;
+            color: #6b7280;
+            font-size: 13px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        @media (max-width: 700px) {
+
+            .container {
+                width: 98%;
+                margin: 15px auto;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 23px;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
 
 
-{% block content %}
+<body>
 
-<section class="page-header">
+<div class="container">
 
-    <div>
+    <!-- =================================================
+         HEADER
+    ================================================== -->
 
-        <h1>
-            Transaction Monitoring
-        </h1>
+    <div class="header">
+
+        <h1>Transaction Analysis</h1>
 
         <p>
-            Review financial transactions analyzed by
-            the anomaly detection engine.
+            Machine learning and historical analysis are used
+            to identify unusual financial activity for investigation.
         </p>
 
     </div>
 
-</section>
 
+    <!-- =================================================
+         SEARCH / FILTER
+    ================================================== -->
 
-<div class="dashboard-card">
+    <div class="toolbar">
 
+        <div class="search-box">
 
-    <div class="table-toolbar">
-
-        <div>
-
-            <h2>
-                Financial Transactions
-            </h2>
-
-            <p>
-                {{ transactions|length }}
-                transactions loaded
-            </p>
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Search transaction, client or ID..."
+                onkeyup="filterTransactions()"
+            >
 
         </div>
 
 
-        <input
-            type="text"
-            id="transactionSearch"
-            class="search-box"
-            placeholder="Search transactions..."
+        <select
+            id="riskFilter"
+            onchange="filterTransactions()"
         >
+
+            <option value="ALL">
+                All Risk Levels
+            </option>
+
+            <option value="LOW">
+                Low
+            </option>
+
+            <option value="MEDIUM">
+                Medium
+            </option>
+
+            <option value="HIGH">
+                High
+            </option>
+
+            <option value="CRITICAL">
+                Critical
+            </option>
+
+        </select>
+
+
+        <select
+            id="mlFilter"
+            onchange="filterTransactions()"
+        >
+
+            <option value="ALL">
+                All ML Results
+            </option>
+
+            <option value="ANOMALY">
+                ML Anomaly
+            </option>
+
+            <option value="NORMAL">
+                ML Normal
+            </option>
+
+        </select>
 
     </div>
 
 
-    <div class="table-wrapper">
+    <!-- =================================================
+         TABLE
+    ================================================== -->
 
-        <table id="transactionsTable">
+    <div class="table-card">
 
-            <thead>
+        {% if transactions %}
 
-                <tr>
+        <div class="table-wrapper">
 
-                    <th>
-                        Transaction ID
-                    </th>
+            <table id="transactionTable">
 
-                    <th>
-                        Amount
-                    </th>
+                <thead>
 
-                    <th>
-                        Payment Date
-                    </th>
+                    <tr>
 
-                    <th>
-                        Anomaly Status
-                    </th>
+                        <th>Transaction</th>
 
-                    <th>
-                        Risk Score
-                    </th>
+                        <th>Client</th>
 
-                    <th>
-                        Action
-                    </th>
+                        <th>Amount</th>
 
-                </tr>
+                        <th>ML Score</th>
 
-            </thead>
+                        <th>Risk Score</th>
+
+                        <th>Risk Level</th>
+
+                        <th>ML Detection</th>
+
+                        <th>Anomaly Signals</th>
+
+                        <th>Related</th>
+
+                        <th>Reasons</th>
+
+                        <th>Action</th>
+
+                    </tr>
+
+                </thead>
 
 
-            <tbody>
+                <tbody>
 
                 {% for transaction in transactions %}
 
-                <tr>
+                    <tr
+                        class="transaction-row"
 
-                    <td>
+                        data-risk="{{ transaction.get('risk_level', 'LOW') }}"
 
-                        <strong>
-                            {{ transaction["id"] }}
-                        </strong>
+                        data-ml="{% if transaction.get('ml_anomaly', False) %}ANOMALY{% else %}NORMAL{% endif %}"
+                    >
 
-                    </td>
+                        <!-- TRANSACTION -->
 
+                        <td>
 
-                    <td>
+                            <div class="transaction-id">
 
-                        {{ transaction["amount"] }}
+                                {{ transaction.get('id', 'N/A') }}
 
-                    </td>
+                            </div>
 
+                            {% if transaction.get('payment_number') %}
 
-                    <td>
+                            <small>
 
-                        {{ transaction["payment_date"] }}
+                                {{ transaction.get('payment_number') }}
 
-                    </td>
+                            </small>
 
+                            {% endif %}
 
-                    <td>
-
-                        {% if transaction["amount_anomaly"] %}
-
-                        <span class="badge badge-medium">
-                            Anomaly Detected
-                        </span>
-
-                        {% else %}
-
-                        <span class="badge badge-low">
-                            Normal
-                        </span>
-
-                        {% endif %}
-
-                    </td>
+                        </td>
 
 
-                    <td>
+                        <!-- CLIENT -->
 
-                        {% if transaction.get("risk_score") is not none %}
+                        <td>
 
-                            {{ transaction["risk_score"] }}
+                            <div class="client-name">
 
-                        {% else %}
+                                {{ transaction.get('client_name', 'Unknown') }}
 
-                            0
+                            </div>
 
-                        {% endif %}
+                            <small>
 
-                    </td>
+                                {{ transaction.get('client_id', '') }}
+
+                            </small>
+
+                        </td>
 
 
-                    <td>
+                        <!-- AMOUNT -->
 
-                        <a
-                            href="/investigation/{{ transaction['id'] }}"
-                            class="investigate-button"
-                        >
-                            Investigate
-                        </a>
+                        <td>
 
-                    </td>
+                            <div class="amount">
 
-                </tr>
+                                ₹{{ "{:,.2f}".format(
+                                    transaction.get('amount', 0) | float
+                                ) }}
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- ML SCORE -->
+
+                        <td>
+
+                            <div class="score">
+
+                                {{ "%.1f"|format(
+                                    transaction.get(
+                                        'ml_anomaly_score',
+                                        0
+                                    )|float
+                                ) }}
+
+                            </div>
+
+                            <div class="score-bar">
+
+                                <div
+                                    class="score-fill"
+                                    style="width: {{ transaction.get(
+                                        'ml_anomaly_score',
+                                        0
+                                    )|float }}%; background: #4f46e5;"
+                                ></div>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- RISK SCORE -->
+
+                        <td>
+
+                            <div class="score">
+
+                                {{ "%.1f"|format(
+                                    transaction.get(
+                                        'risk_score',
+                                        0
+                                    )|float
+                                ) }}
+
+                                / 100
+
+                            </div>
+
+                            <div class="score-bar">
+
+                                <div
+                                    class="score-fill"
+                                    style="width: {{ transaction.get(
+                                        'risk_score',
+                                        0
+                                    )|float }}%; background: #ef4444;"
+                                ></div>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- RISK LEVEL -->
+
+                        <td>
+
+                            {% set risk = transaction.get(
+                                'risk_level',
+                                'LOW'
+                            ) %}
+
+                            {% if risk == 'CRITICAL' %}
+
+                                <span class="risk-badge risk-critical">
+                                    CRITICAL
+                                </span>
+
+                            {% elif risk == 'HIGH' %}
+
+                                <span class="risk-badge risk-high">
+                                    HIGH
+                                </span>
+
+                            {% elif risk == 'MEDIUM' %}
+
+                                <span class="risk-badge risk-medium">
+                                    MEDIUM
+                                </span>
+
+                            {% else %}
+
+                                <span class="risk-badge risk-low">
+                                    LOW
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- ML RESULT -->
+
+                        <td>
+
+                            {% if transaction.get(
+                                'ml_anomaly',
+                                False
+                            ) %}
+
+                                <span class="ml-anomaly">
+                                    Anomaly
+                                </span>
+
+                            {% else %}
+
+                                <span class="ml-normal">
+                                    Normal
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- SIGNALS -->
+
+                        <td>
+
+                            <div class="signals">
+
+                                <span class="
+                                    signal
+                                    {% if transaction.get(
+                                        'amount_anomaly',
+                                        False
+                                    ) %}
+                                        active
+                                    {% endif %}
+                                ">
+
+                                    Amount
+
+                                </span>
+
+
+                                <span class="
+                                    signal
+                                    {% if transaction.get(
+                                        'frequency_anomaly',
+                                        False
+                                    ) %}
+                                        active
+                                    {% endif %}
+                                ">
+
+                                    Frequency
+
+                                </span>
+
+
+                                <span class="
+                                    signal
+                                    {% if transaction.get(
+                                        'counterparty_anomaly',
+                                        False
+                                    ) %}
+                                        active
+                                    {% endif %}
+                                ">
+
+                                    Counterparty
+
+                                </span>
+
+
+                                <span class="
+                                    signal
+                                    {% if transaction.get(
+                                        'time_anomaly',
+                                        False
+                                    ) %}
+                                        active
+                                    {% endif %}
+                                ">
+
+                                    Time
+
+                                </span>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- RELATED -->
+
+                        <td>
+
+                            <strong>
+
+                                {{ transaction.get(
+                                    'related_transaction_count',
+                                    0
+                                ) }}
+
+                            </strong>
+
+                            transaction(s)
+
+                        </td>
+
+
+                        <!-- REASONS -->
+
+                        <td>
+
+                            <div class="reason-list">
+
+                                {% set reasons =
+                                    transaction.get(
+                                        'anomaly_reasons',
+                                        []
+                                    )
+                                %}
+
+                                {% for reason in reasons %}
+
+                                    <div class="reason">
+
+                                        • {{ reason }}
+
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- ACTION -->
+
+                        <td>
+
+                            <a
+                                class="investigate-btn"
+                                href="{{ url_for(
+                                    'investigation',
+                                    transaction_id=transaction.get('id')
+                                ) }}"
+                            >
+
+                                Investigate
+
+                            </a>
+
+                        </td>
+
+                    </tr>
 
                 {% endfor %}
 
-            </tbody>
+                </tbody>
 
-        </table>
+            </table>
+
+        </div>
+
+
+        <div class="footer-info">
+
+            Showing
+            <span id="visibleCount">
+                {{ transactions|length }}
+            </span>
+            of
+            {{ transactions|length }}
+            transactions
+
+        </div>
+
+
+        {% else %}
+
+        <div class="empty">
+
+            <h3>No transactions found</h3>
+
+            <p>
+                There are currently no transactions available
+                for analysis.
+            </p>
+
+        </div>
+
+        {% endif %}
 
     </div>
 
 </div>
 
-{% endblock %}
+
+<!-- =====================================================
+     FILTER JAVASCRIPT
+====================================================== -->
+
+<script>
+
+function filterTransactions() {
+
+    const searchInput =
+        document
+        .getElementById("searchInput")
+        .value
+        .toLowerCase();
+
+    const riskFilter =
+        document
+        .getElementById("riskFilter")
+        .value;
+
+    const mlFilter =
+        document
+        .getElementById("mlFilter")
+        .value;
+
+    const rows =
+        document.querySelectorAll(
+            ".transaction-row"
+        );
+
+    let visible = 0;
+
+
+    rows.forEach(function(row) {
+
+        const rowText =
+            row.innerText.toLowerCase();
+
+        const rowRisk =
+            row.dataset.risk;
+
+        const rowML =
+            row.dataset.ml;
+
+
+        const matchesSearch =
+            rowText.includes(
+                searchInput
+            );
+
+
+        const matchesRisk =
+            riskFilter === "ALL"
+            ||
+            rowRisk === riskFilter;
+
+
+        const matchesML =
+            mlFilter === "ALL"
+            ||
+            rowML === mlFilter;
+
+
+        if (
+            matchesSearch
+            &&
+            matchesRisk
+            &&
+            matchesML
+        ) {
+
+            row.style.display = "";
+
+            visible++;
+
+        } else {
+
+            row.style.display = "none";
+
+        }
+
+    });
+
+
+    const visibleCount =
+        document.getElementById(
+            "visibleCount"
+        );
+
+    if (visibleCount) {
+
+        visibleCount.innerText =
+            visible;
+
+    }
+
+}
+
+</script>
+
+</body>
+
+</html>
+

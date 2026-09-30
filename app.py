@@ -71,7 +71,6 @@ def get_analyzed_payments():
 
     return df
 
-
 # ============================================================
 # DASHBOARD
 # ============================================================
@@ -81,35 +80,86 @@ def dashboard():
 
     df = get_analyzed_payments()
 
+    # --------------------------------------------------------
+    # Basic statistics
+    # --------------------------------------------------------
+
     total_transactions = len(df)
 
-    total_anomalies = int(
-        df["amount_anomaly"].sum()
-    )
+    # Existing statistical anomalies
+    amount_anomalies = 0
+
+    if "amount_anomaly" in df.columns:
+        amount_anomalies = int(
+            df["amount_anomaly"]
+            .fillna(False)
+            .sum()
+        )
+
+    # --------------------------------------------------------
+    # ML anomalies
+    # --------------------------------------------------------
+
+    ml_anomalies = 0
+
+    if "ml_anomaly" in df.columns:
+        ml_anomalies = int(
+            df["ml_anomaly"]
+            .fillna(False)
+            .sum()
+        )
+
+    # --------------------------------------------------------
+    # Risk levels
+    # --------------------------------------------------------
 
     high_risk = 0
+    medium_risk = 0
+    low_risk = 0
 
     if "risk_level" in df.columns:
 
         high_risk = int(
-            (
-                df["risk_level"] == "HIGH"
-            ).sum()
+            (df["risk_level"] == "HIGH").sum()
+        )
+
+        medium_risk = int(
+            (df["risk_level"] == "MEDIUM").sum()
+        )
+
+        low_risk = int(
+            (df["risk_level"] == "LOW").sum()
+        )
+
+    # --------------------------------------------------------
+    # Total flagged transactions
+    # --------------------------------------------------------
+
+    flagged_transactions = 0
+
+    if "anomaly_score" in df.columns:
+
+        flagged_transactions = int(
+            (df["anomaly_score"] > 0).sum()
         )
 
     return render_template(
         "dashboard.html",
 
-        total_transactions=
-            total_transactions,
+        total_transactions=total_transactions,
 
-        total_anomalies=
-            total_anomalies,
+        total_anomalies=amount_anomalies,
 
-        high_risk=
-            high_risk
+        ml_anomalies=ml_anomalies,
+
+        flagged_transactions=flagged_transactions,
+
+        high_risk=high_risk,
+
+        medium_risk=medium_risk,
+
+        low_risk=low_risk
     )
-
 
 # ============================================================
 # TRANSACTIONS
@@ -126,9 +176,7 @@ def transactions():
 
     return render_template(
         "transactions.html",
-
-        transactions=
-            transactions_data
+        transactions=transactions_data
     )
 
 
@@ -552,7 +600,13 @@ def set_outcome_route(
         )
     )
 
+from flask import Flask
 
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Application is running"
 # ============================================================
 # RUN APPLICATION
 # ============================================================
