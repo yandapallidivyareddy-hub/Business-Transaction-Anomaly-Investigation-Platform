@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Business Transaction Anomaly Investigation Platform
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <!-- Navigation -->
+
+    <nav class="navbar">
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                FIN
+            </div>
+
+            <div>
+                <div class="brand-name">
+                    Business Transaction Anomaly
+                </div>
+
+                <div class="brand-subtitle">
+                    Investigation Platform
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="nav-links">
+
+            <a
+                href="{{ url_for('dashboard') }}"
+                class="nav-link"
+            >
+                Dashboard
+            </a>
+
+            <a
+                href="{{ url_for('transactions') }}"
+                class="nav-link"
+            >
+                Transactions
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- Main content -->
+
+    <main class="main-container">
+
+        {% block content %}
+
+        {% endblock %}
+
+    </main>
+
+
+    <script
+        src="{{ url_for('static', filename='script.js') }}"
+    ></script>
+
+</body>
+
+</html>
+

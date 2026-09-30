@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+<!-- Page Header -->
+
+<section class="page-header">
+
+    <div>
+
+        <h1>
+            Business Transaction Anomaly Investigation
+        </h1>
+
+        <p>
+            Monitor financial transactions, identify unusual
+            patterns, and prioritize investigations.
+        </p>
+
+    </div>
+
+    <div class="status-badge">
+
+        <span class="status-dot"></span>
+
+        Nova API Connected
+
+    </div>
+
+</section>
+
+
+<!-- Summary Cards -->
+
+<section class="metrics-grid">
+
+
+    <div class="metric-card">
+
+        <div class="metric-header">
+
+            <span>
+                Total Transactions
+            </span>
+
+            <span class="metric-icon">
+                TX
+            </span>
+
+        </div>
+
+        <div class="metric-value">
+
+            {{ total_transactions }}
+
+        </div>
+
+        <div class="metric-description">
+
+            Transactions analyzed
+
+        </div>
+
+    </div>
+
+
+    <div class="metric-card">
+
+        <div class="metric-header">
+
+            <span>
+                Anomalies Detected
+            </span>
+
+            <span class="metric-icon warning-icon">
+                !
+            </span>
+
+        </div>
+
+        <div class="metric-value">
+
+            {{ total_anomalies }}
+
+        </div>
+
+        <div class="metric-description">
+
+            Transactions requiring review
+
+        </div>
+
+    </div>
+
+
+    <div class="metric-card">
+
+        <div class="metric-header">
+
+            <span>
+                High-Risk Cases
+            </span>
+
+            <span class="metric-icon danger-icon">
+                HR
+            </span>
+
+        </div>
+
+        <div class="metric-value">
+
+            {{ high_risk }}
+
+        </div>
+
+        <div class="metric-description">
+
+            Priority investigations
+
+        </div>
+
+    </div>
+
+
+    <div class="metric-card">
+
+        <div class="metric-header">
+
+            <span>
+                Investigation Status
+            </span>
+
+            <span class="metric-icon">
+                OK
+            </span>
+
+        </div>
+
+        <div class="metric-value">
+            Active
+        </div>
+
+        <div class="metric-description">
+
+            Monitoring system active
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- Main Dashboard -->
+
+<section class="dashboard-grid">
+
+
+    <!-- System Overview -->
+
+    <div class="dashboard-card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h2>
+                    Investigation Overview
+                </h2>
+
+                <p>
+                    Current transaction monitoring status
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="overview-content">
+
+            <div class="overview-item">
+
+                <span class="overview-label">
+                    Data Source
+                </span>
+
+                <strong>
+                    Nova API
+                </strong>
+
+            </div>
+
+
+            <div class="overview-item">
+
+                <span class="overview-label">
+                    Analysis Engine
+                </span>
+
+                <strong>
+                    FIN-41 Anomaly Engine
+                </strong>
+
+            </div>
+
+
+            <div class="overview-item">
+
+                <span class="overview-label">
+                    Detection Method
+                </span>
+
+                <strong>
+                    Statistical Analysis
+                </strong>
+
+            </div>
+
+
+            <div class="overview-item">
+
+                <span class="overview-label">
+                    Monitoring
+                </span>
+
+                <strong class="active-text">
+                    Active
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Quick Actions -->
+
+    <div class="dashboard-card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h2>
+                    Investigation Actions
+                </h2>
+
+                <p>
+                    Review transaction activity
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="action-list">
+
+            <a
+                href="{{ url_for('transactions') }}"
+                class="action-button"
+            >
+
+                <div>
+
+                    <strong>
+                        View Transactions
+                    </strong>
+
+                    <span>
+                        Review analyzed transactions
+                    </span>
+
+                </div>
+
+                <span class="arrow">
+                    →
+                </span>
+
+            </a>
+
+
+            <a
+                href="{{ url_for('transactions') }}"
+                class="action-button"
+            >
+
+                <div>
+
+                    <strong>
+                        Review Anomalies
+                    </strong>
+
+                    <span>
+                        Investigate unusual activity
+                    </span>
+
+                </div>
+
+                <span class="arrow">
+                    →
+                </span>
+
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- Detection Workflow -->
+
+<section class="dashboard-card workflow-card">
+
+    <div class="card-header">
+
+        <div>
+
+            <h2>
+                Transaction Investigation Workflow
+            </h2>
+
+            <p>
+                How financial transactions are analyzed
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="workflow">
+
+        <div class="workflow-step">
+
+            <div class="workflow-number">
+                01
+            </div>
+
+            <strong>
+                Data Collection
+            </strong>
+
+            <span>
+                Financial records retrieved from Nova
+            </span>
+
+        </div>
+
+
+        <div class="workflow-line"></div>
+
+
+        <div class="workflow-step">
+
+            <div class="workflow-number">
+                02
+            </div>
+
+            <strong>
+                Data Processing
+            </strong>
+
+            <span>
+                Transactions cleaned and prepared
+            </span>
+
+        </div>
+
+
+        <div class="workflow-line"></div>
+
+
+        <div class="workflow-step">
+
+            <div class="workflow-number">
+                03
+            </div>
+
+            <strong>
+                Anomaly Detection
+            </strong>
+
+            <span>
+                Unusual transaction patterns identified
+            </span>
+
+        </div>
+
+
+        <div class="workflow-line"></div>
+
+
+        <div class="workflow-step">
+
+            <div class="workflow-number">
+                04
+            </div>
+
+            <strong>
+                Investigation
+            </strong>
+
+            <span>
+                Investigators review potential risks
+            </span>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

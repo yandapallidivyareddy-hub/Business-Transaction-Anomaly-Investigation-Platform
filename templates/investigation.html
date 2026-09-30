@@ -1,0 +1,994 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- ========================================================
+     PAGE HEADER
+========================================================= -->
+
+<section class="page-header">
+
+    <div>
+
+        <a
+            href="{{ url_for('transactions') }}"
+            class="back-link"
+        >
+            ← Back to Transactions
+        </a>
+
+        <h1>
+            Investigation Workspace
+        </h1>
+
+        <p>
+            Review transaction anomalies, collect evidence,
+            record findings, and track investigation outcomes.
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- ========================================================
+     TRANSACTION DETAILS
+========================================================= -->
+
+<div class="investigation-grid">
+
+    <div class="dashboard-card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h2>
+                    Transaction Details
+                </h2>
+
+                <p>
+                    Financial transaction information
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="detail-list">
+
+            <div class="detail-row">
+
+                <span>
+                    Transaction ID
+                </span>
+
+                <strong>
+                    {{ transaction["id"] }}
+                </strong>
+
+            </div>
+
+
+            {% if transaction.get("client_id") %}
+
+            <div class="detail-row">
+
+                <span>
+                    Client ID
+                </span>
+
+                <strong>
+                    {{ transaction["client_id"] }}
+                </strong>
+
+            </div>
+
+            {% endif %}
+
+
+            {% if transaction.get("client_name") %}
+
+            <div class="detail-row">
+
+                <span>
+                    Client
+                </span>
+
+                <strong>
+                    {{ transaction["client_name"] }}
+                </strong>
+
+            </div>
+
+            {% endif %}
+
+
+            <div class="detail-row">
+
+                <span>
+                    Amount
+                </span>
+
+                <strong>
+                    {{ transaction["amount"] }}
+                </strong>
+
+            </div>
+
+
+            <div class="detail-row">
+
+                <span>
+                    Payment Date
+                </span>
+
+                <strong>
+                    {{ transaction["payment_date"] }}
+                </strong>
+
+            </div>
+
+
+            {% if transaction.get("method") %}
+
+            <div class="detail-row">
+
+                <span>
+                    Payment Method
+                </span>
+
+                <strong>
+                    {{ transaction["method"] }}
+                </strong>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- ====================================================
+         ANOMALY ASSESSMENT
+    ===================================================== -->
+
+    <div class="dashboard-card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h2>
+                    Anomaly Assessment
+                </h2>
+
+                <p>
+                    Automated analysis signals
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="anomaly-list">
+
+            {% if transaction.get("amount_anomaly") %}
+
+            <div class="anomaly-item">
+                <strong>
+                    Unusual Amount
+                </strong>
+
+                <span>
+                    Transaction amount differs from
+                    the historical pattern.
+                </span>
+            </div>
+
+            {% endif %}
+
+
+            {% if transaction.get("frequency_anomaly") %}
+
+            <div class="anomaly-item">
+                <strong>
+                    Frequency Anomaly
+                </strong>
+
+                <span>
+                    Transaction frequency is unusual.
+                </span>
+            </div>
+
+            {% endif %}
+
+
+            {% if transaction.get("burst_anomaly") %}
+
+            <div class="anomaly-item">
+                <strong>
+                    Transaction Burst
+                </strong>
+
+                <span>
+                    Multiple transactions occurred
+                    within a short period.
+                </span>
+            </div>
+
+            {% endif %}
+
+
+            {% if transaction.get("counterparty_anomaly") %}
+
+            <div class="anomaly-item">
+                <strong>
+                    Counterparty Anomaly
+                </strong>
+
+                <span>
+                    Unusual counterparty behaviour detected.
+                </span>
+            </div>
+
+            {% endif %}
+
+
+            {% if transaction.get("new_counterparty_anomaly") %}
+
+            <div class="anomaly-item">
+                <strong>
+                    New Counterparty
+                </strong>
+
+                <span>
+                    Transaction involves an uncommon
+                    counterparty.
+                </span>
+            </div>
+
+            {% endif %}
+
+
+            {% if transaction.get("counterparty_amount_anomaly") %}
+
+            <div class="anomaly-item">
+                <strong>
+                    Counterparty Amount Anomaly
+                </strong>
+
+                <span>
+                    Amount is unusual for this counterparty.
+                </span>
+            </div>
+
+            {% endif %}
+
+
+            {% if transaction.get("time_anomaly") %}
+
+            <div class="anomaly-item">
+                <strong>
+                    Time Anomaly
+                </strong>
+
+                <span>
+                    Transaction timing differs from
+                    the normal pattern.
+                </span>
+            </div>
+
+            {% endif %}
+
+
+            {% if transaction.get("unusual_hour_anomaly") %}
+
+            <div class="anomaly-item">
+                <strong>
+                    Unusual Hour
+                </strong>
+
+                <span>
+                    Transaction occurred at an unusual hour.
+                </span>
+            </div>
+
+            {% endif %}
+
+
+            {% if transaction.get("weekend_anomaly") %}
+
+            <div class="anomaly-item">
+                <strong>
+                    Weekend Anomaly
+                </strong>
+
+                <span>
+                    Transaction occurred during an unusual
+                    weekend period.
+                </span>
+            </div>
+
+            {% endif %}
+
+
+            {% if not (
+                transaction.get("amount_anomaly")
+                or transaction.get("frequency_anomaly")
+                or transaction.get("burst_anomaly")
+                or transaction.get("counterparty_anomaly")
+                or transaction.get("new_counterparty_anomaly")
+                or transaction.get("counterparty_amount_anomaly")
+                or transaction.get("time_anomaly")
+                or transaction.get("unusual_hour_anomaly")
+                or transaction.get("weekend_anomaly")
+            ) %}
+
+            <div class="risk-panel risk-panel-low">
+
+                <span class="risk-label">
+                    NO ANOMALY SIGNALS
+                </span>
+
+                <p>
+                    No configured anomaly indicators
+                    were detected.
+                </p>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================
+     CREATE INVESTIGATION
+========================================================= -->
+
+{% if not investigation %}
+
+<div class="dashboard-card">
+
+    <div class="card-header">
+
+        <div>
+
+            <h2>
+                Create Investigation
+            </h2>
+
+            <p>
+                Open a case for this transaction.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <form
+        method="POST"
+        action="{{
+            url_for(
+                'create_investigation_route',
+                transaction_id=transaction['id']
+            )
+        }}"
+    >
+
+        <div class="form-grid">
+
+            <div>
+
+                <label for="investigator">
+                    Investigator
+                </label>
+
+                <input
+                    type="text"
+                    id="investigator"
+                    name="investigator"
+                    value="Investigator 1"
+                    required
+                >
+
+            </div>
+
+
+            <div>
+
+                <label for="priority">
+                    Priority
+                </label>
+
+                <select
+                    id="priority"
+                    name="priority"
+                >
+
+                    <option value="Low">
+                        Low
+                    </option>
+
+                    <option
+                        value="Medium"
+                        selected
+                    >
+                        Medium
+                    </option>
+
+                    <option value="High">
+                        High
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="primary-button"
+        >
+            Create Investigation
+        </button>
+
+    </form>
+
+</div>
+
+{% endif %}
+
+
+<!-- ========================================================
+     ACTIVE INVESTIGATION
+========================================================= -->
+
+{% if investigation %}
+
+<div class="dashboard-card">
+
+    <div class="card-header">
+
+        <div>
+
+            <h2>
+                Investigation Case
+            </h2>
+
+            <p>
+                Persistent investigation record
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="detail-list">
+
+        <div class="detail-row">
+
+            <span>
+                Investigation ID
+            </span>
+
+            <strong>
+                {{ investigation["investigation_id"] }}
+            </strong>
+
+        </div>
+
+
+        <div class="detail-row">
+
+            <span>
+                Investigator
+            </span>
+
+            <strong>
+                {{ investigation["investigator"] }}
+            </strong>
+
+        </div>
+
+
+        <div class="detail-row">
+
+            <span>
+                Priority
+            </span>
+
+            <strong>
+                {{ investigation["priority"] }}
+            </strong>
+
+        </div>
+
+
+        <div class="detail-row">
+
+            <span>
+                Status
+            </span>
+
+            <strong>
+                {{ investigation["status"] }}
+            </strong>
+
+        </div>
+
+
+        <div class="detail-row">
+
+            <span>
+                Outcome
+            </span>
+
+            <strong>
+                {{ investigation["outcome"] or "Not decided" }}
+            </strong>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================
+     STATUS MANAGEMENT
+========================================================= -->
+
+<div class="dashboard-card">
+
+    <div class="card-header">
+
+        <div>
+
+            <h2>
+                Investigation Status
+            </h2>
+
+            <p>
+                Update the case lifecycle.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <form
+        method="POST"
+        action="{{
+            url_for(
+                'update_status_route',
+                transaction_id=transaction['id']
+            )
+        }}"
+    >
+
+        <select
+            name="status"
+            required
+        >
+
+            {% if investigation["status"] == "Open" %}
+
+            <option value="Under Review">
+                Under Review
+            </option>
+
+            <option value="Closed">
+                Closed
+            </option>
+
+            {% elif investigation["status"] == "Under Review" %}
+
+            <option value="Escalated">
+                Escalated
+            </option>
+
+            <option value="Resolved">
+                Resolved
+            </option>
+
+            <option value="Closed">
+                Closed
+            </option>
+
+            {% elif investigation["status"] == "Escalated" %}
+
+            <option value="Under Review">
+                Under Review
+            </option>
+
+            <option value="Resolved">
+                Resolved
+            </option>
+
+            <option value="Closed">
+                Closed
+            </option>
+
+            {% elif investigation["status"] == "Resolved" %}
+
+            <option value="Closed">
+                Closed
+            </option>
+
+            {% endif %}
+
+        </select>
+
+
+        <button
+            type="submit"
+            class="primary-button"
+        >
+            Update Status
+        </button>
+
+    </form>
+
+</div>
+
+
+<!-- ========================================================
+     INVESTIGATION NOTES
+========================================================= -->
+
+<div class="dashboard-card">
+
+    <div class="card-header">
+
+        <div>
+
+            <h2>
+                Investigation Notes
+            </h2>
+
+            <p>
+                Record investigator observations.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    {% if investigation["notes"] %}
+
+    <div class="notes-display">
+
+        {{ investigation["notes"] }}
+
+    </div>
+
+    {% endif %}
+
+
+    <form
+        method="POST"
+        action="{{
+            url_for(
+                'add_note_route',
+                transaction_id=transaction['id']
+            )
+        }}"
+    >
+
+        <textarea
+            name="note"
+            class="notes-box"
+            placeholder="Enter investigation notes..."
+            required
+        ></textarea>
+
+
+        <button
+            type="submit"
+            class="primary-button"
+        >
+            Add Note
+        </button>
+
+    </form>
+
+</div>
+
+
+<!-- ========================================================
+     EVIDENCE COLLECTION
+========================================================= -->
+
+<div class="dashboard-card">
+
+    <div class="card-header">
+
+        <div>
+
+            <h2>
+                Evidence Collection
+            </h2>
+
+            <p>
+                Record evidence supporting the investigation.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <form
+        method="POST"
+        action="{{
+            url_for(
+                'add_evidence_route',
+                transaction_id=transaction['id']
+            )
+        }}"
+    >
+
+        <div class="form-grid">
+
+            <div>
+
+                <label for="evidence_type">
+                    Evidence Type
+                </label>
+
+                <select
+                    name="evidence_type"
+                    id="evidence_type"
+                >
+
+                    <option value="Transaction">
+                        Transaction
+                    </option>
+
+                    <option value="Related Transaction">
+                        Related Transaction
+                    </option>
+
+                    <option value="Document">
+                        Document
+                    </option>
+
+                    <option value="Observation">
+                        Observation
+                    </option>
+
+                    <option value="Reference">
+                        Reference
+                    </option>
+
+                    <option value="Other">
+                        Other
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div>
+
+                <label for="reference">
+                    Reference
+                </label>
+
+                <input
+                    type="text"
+                    name="reference"
+                    id="reference"
+                    placeholder="Transaction or document reference"
+                >
+
+            </div>
+
+        </div>
+
+
+        <label for="description">
+            Evidence Description
+        </label>
+
+        <textarea
+            name="description"
+            id="description"
+            class="notes-box"
+            placeholder="Describe the evidence..."
+            required
+        ></textarea>
+
+
+        <button
+            type="submit"
+            class="primary-button"
+        >
+            Add Evidence
+        </button>
+
+    </form>
+
+</div>
+
+
+<!-- ========================================================
+     SAVED EVIDENCE
+========================================================= -->
+
+<div class="dashboard-card">
+
+    <div class="card-header">
+
+        <div>
+
+            <h2>
+                Evidence Collected
+            </h2>
+
+            <p>
+                Evidence associated with this investigation.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    {% if evidence %}
+
+        {% for item in evidence %}
+
+        <div class="evidence-item">
+
+            <div class="evidence-header">
+
+                <strong>
+                    {{ item["evidence_type"] }}
+                </strong>
+
+                <span>
+                    Evidence #{{ item["evidence_id"] }}
+                </span>
+
+            </div>
+
+
+            <p>
+                {{ item["description"] }}
+            </p>
+
+
+            {% if item["reference"] %}
+
+            <div class="evidence-reference">
+
+                Reference:
+                {{ item["reference"] }}
+
+            </div>
+
+            {% endif %}
+
+
+            <small>
+                Added:
+                {{ item["added_at"] }}
+            </small>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <p>
+            No evidence has been added yet.
+        </p>
+
+    {% endif %}
+
+</div>
+
+
+<!-- ========================================================
+     INVESTIGATION OUTCOME
+========================================================= -->
+
+<div class="dashboard-card">
+
+    <div class="card-header">
+
+        <div>
+
+            <h2>
+                Investigation Outcome
+            </h2>
+
+            <p>
+                Record the final investigation finding.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <form
+        method="POST"
+        action="{{
+            url_for(
+                'set_outcome_route',
+                transaction_id=transaction['id']
+            )
+        }}"
+    >
+
+        <select
+            name="outcome"
+            required
+        >
+
+            <option value="">
+                Select outcome
+            </option>
+
+            <option value="Pending further investigation">
+                Pending further investigation
+            </option>
+
+            <option value="No issue identified">
+                No issue identified
+            </option>
+
+            <option value="Legitimate transaction">
+                Legitimate transaction
+            </option>
+
+            <option value="Policy violation">
+                Policy violation
+            </option>
+
+            <option value="Requires escalation">
+                Requires escalation
+            </option>
+
+            <option value="Confirmed anomaly">
+                Confirmed anomaly
+            </option>
+
+        </select>
+
+
+        <button
+            type="submit"
+            class="primary-button"
+        >
+            Save Outcome
+        </button>
+
+    </form>
+
+</div>
+
+{% endif %}
+
+{% endblock %}
+

@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+<section class="page-header">
+
+    <div>
+
+        <h1>
+            Transaction Monitoring
+        </h1>
+
+        <p>
+            Review financial transactions analyzed by
+            the anomaly detection engine.
+        </p>
+
+    </div>
+
+</section>
+
+
+<div class="dashboard-card">
+
+
+    <div class="table-toolbar">
+
+        <div>
+
+            <h2>
+                Financial Transactions
+            </h2>
+
+            <p>
+                {{ transactions|length }}
+                transactions loaded
+            </p>
+
+        </div>
+
+
+        <input
+            type="text"
+            id="transactionSearch"
+            class="search-box"
+            placeholder="Search transactions..."
+        >
+
+    </div>
+
+
+    <div class="table-wrapper">
+
+        <table id="transactionsTable">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Transaction ID
+                    </th>
+
+                    <th>
+                        Amount
+                    </th>
+
+                    <th>
+                        Payment Date
+                    </th>
+
+                    <th>
+                        Anomaly Status
+                    </th>
+
+                    <th>
+                        Risk Score
+                    </th>
+
+                    <th>
+                        Action
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for transaction in transactions %}
+
+                <tr>
+
+                    <td>
+
+                        <strong>
+                            {{ transaction["id"] }}
+                        </strong>
+
+                    </td>
+
+
+                    <td>
+
+                        {{ transaction["amount"] }}
+
+                    </td>
+
+
+                    <td>
+
+                        {{ transaction["payment_date"] }}
+
+                    </td>
+
+
+                    <td>
+
+                        {% if transaction["amount_anomaly"] %}
+
+                        <span class="badge badge-medium">
+                            Anomaly Detected
+                        </span>
+
+                        {% else %}
+
+                        <span class="badge badge-low">
+                            Normal
+                        </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td>
+
+                        {% if transaction.get("risk_score") is not none %}
+
+                            {{ transaction["risk_score"] }}
+
+                        {% else %}
+
+                            0
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td>
+
+                        <a
+                            href="/investigation/{{ transaction['id'] }}"
+                            class="investigate-button"
+                        >
+                            Investigate
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}
