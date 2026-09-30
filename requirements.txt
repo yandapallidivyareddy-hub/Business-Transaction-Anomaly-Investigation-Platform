@@ -1,6 +1,7 @@
-Flask
+fastapi
+uvicorn[standard]
 pandas
 requests
-gunicorn
-python-dotenv
 scikit-learn
+python-dotenv
+gunicorn
