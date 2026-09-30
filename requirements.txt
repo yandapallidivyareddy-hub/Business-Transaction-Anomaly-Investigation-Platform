@@ -1,7 +1,8 @@
 fastapi
-uvicorn[standard]
+uvicorn
 jinja2
+python-multipart
 pandas
-requests
+numpy
 scikit-learn
-python-dotenv
+requests
