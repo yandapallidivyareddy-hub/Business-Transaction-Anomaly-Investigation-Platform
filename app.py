@@ -1,29 +1,13 @@
 import os
 
-from fastapi import (
-    FastAPI,
-    Request,
-    Form,
-    HTTPException
-)
-
-from fastapi.responses import (
-    HTMLResponse,
-    RedirectResponse
-)
-
+from fastapi import FastAPI, Request, Form, HTTPException
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 
 from data_loader import get_payments
-
-from data_processor import (
-    payments_to_dataframe,
-    clean_payments
-)
-
-from anomaly_engine import (
-    analyze_transactions
-)
+from data_processor import payments_to_dataframe, clean_payments
+from anomaly_engine import analyze_transactions
 
 from investigation_manager import (
     build_investigation,
@@ -51,6 +35,11 @@ templates = Jinja2Templates(
     directory="templates"
 )
 
+app.mount(
+    "/static",
+    StaticFiles(directory="static"),
+    name="static"
+)
 
 initialize_investigation_database()
 
@@ -68,7 +57,10 @@ def get_analyzed_payments():
     )
 
     df = analyze_transactions(
-        df
+        df,
+        group_column="client_id",
+        counterparty_column="client_name",
+        date_column="payment_date"
     )
 
     return df
@@ -76,7 +68,8 @@ def get_analyzed_payments():
 
 @app.get(
     "/",
-    response_class=HTMLResponse
+    response_class=HTMLResponse,
+    name="dashboard"
 )
 def dashboard(request: Request):
 
@@ -87,7 +80,6 @@ def dashboard(request: Request):
     amount_anomalies = 0
 
     if "amount_anomaly" in df.columns:
-
         amount_anomalies = int(
             df["amount_anomaly"]
             .fillna(False)
@@ -97,7 +89,6 @@ def dashboard(request: Request):
     ml_anomalies = 0
 
     if "ml_anomaly" in df.columns:
-
         ml_anomalies = int(
             df["ml_anomaly"]
             .fillna(False)
@@ -125,7 +116,6 @@ def dashboard(request: Request):
     flagged_transactions = 0
 
     if "anomaly_score" in df.columns:
-
         flagged_transactions = int(
             (df["anomaly_score"] > 0).sum()
         )
@@ -147,7 +137,8 @@ def dashboard(request: Request):
 
 @app.get(
     "/transactions",
-    response_class=HTMLResponse
+    response_class=HTMLResponse,
+    name="transactions"
 )
 def transactions(request: Request):
 
@@ -168,7 +159,8 @@ def transactions(request: Request):
 
 @app.get(
     "/investigation/{transaction_id}",
-    response_class=HTMLResponse
+    response_class=HTMLResponse,
+    name="investigation"
 )
 def investigation(
     request: Request,
@@ -183,15 +175,12 @@ def investigation(
     ]
 
     if matching.empty:
-
         raise HTTPException(
             status_code=404,
             detail="Transaction not found"
         )
 
-    transaction = (
-        matching.iloc[0].to_dict()
-    )
+    transaction = matching.iloc[0].to_dict()
 
     existing_investigation = (
         get_investigation_by_transaction(
@@ -237,15 +226,12 @@ def create_investigation_route(
     ]
 
     if matching.empty:
-
         raise HTTPException(
             status_code=404,
             detail="Transaction not found"
         )
 
-    transaction = (
-        matching.iloc[0].to_dict()
-    )
+    transaction = matching.iloc[0].to_dict()
 
     investigation = build_investigation(
         transaction,
@@ -257,29 +243,17 @@ def create_investigation_route(
         investigation
     )
 
-    if investigation.get(
-        "anomaly_reasons"
-    ):
+    if investigation.get("anomaly_reasons"):
 
         for reason in investigation[
             "anomaly_reasons"
         ]:
 
             evidence = {
-
-                "evidence_type":
-                    "Anomaly Detection",
-
-                "description":
-                    reason,
-
-                "reference":
-                    transaction_id,
-
-                "added_at":
-                    investigation[
-                        "created_at"
-                    ]
+                "evidence_type": "Anomaly Detection",
+                "description": reason,
+                "reference": transaction_id,
+                "added_at": investigation["created_at"]
             }
 
             save_all_evidence(
@@ -308,7 +282,6 @@ def add_note_route(
     )
 
     if investigation is None:
-
         raise HTTPException(
             status_code=404,
             detail="Investigation not found"
@@ -346,7 +319,6 @@ def update_status_route(
     )
 
     if investigation is None:
-
         raise HTTPException(
             status_code=404,
             detail="Investigation not found"
@@ -393,7 +365,6 @@ def add_evidence_route(
     )
 
     if investigation is None:
-
         raise HTTPException(
             status_code=404,
             detail="Investigation not found"
@@ -411,9 +382,7 @@ def add_evidence_route(
     )
 
     save_all_evidence(
-        investigation[
-            "investigation_id"
-        ],
+        investigation["investigation_id"],
         [new_evidence]
     )
 
@@ -442,7 +411,6 @@ def set_outcome_route(
     )
 
     if investigation is None:
-
         raise HTTPException(
             status_code=404,
             detail="Investigation not found"
