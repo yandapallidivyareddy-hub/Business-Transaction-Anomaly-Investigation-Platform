@@ -1,11 +1,18 @@
-from flask import (
-    Flask,
-    render_template,
-    abort,
-    request,
-    redirect,
-    url_for
+import os
+
+from fastapi import (
+    FastAPI,
+    Request,
+    Form,
+    HTTPException
 )
+
+from fastapi.responses import (
+    HTMLResponse,
+    RedirectResponse
+)
+
+from fastapi.templating import Jinja2Templates
 
 from data_loader import get_payments
 
@@ -30,28 +37,23 @@ from investigation_database import (
     initialize_investigation_database,
     save_investigation,
     save_all_evidence,
-    get_investigation,
-    get_investigation_evidence
+    get_investigation_evidence,
+    get_investigation_by_transaction,
+    update_investigation
 )
 
 
-# ============================================================
-# FLASK APPLICATION
-# ============================================================
+app = FastAPI(
+    title="Business Transaction Anomaly Investigation Platform"
+)
 
-app = Flask(__name__)
+templates = Jinja2Templates(
+    directory="templates"
+)
 
-
-# ============================================================
-# INITIALIZE INVESTIGATION DATABASE
-# ============================================================
 
 initialize_investigation_database()
 
-
-# ============================================================
-# GET ANALYZED PAYMENTS
-# ============================================================
 
 def get_analyzed_payments():
 
@@ -71,47 +73,36 @@ def get_analyzed_payments():
 
     return df
 
-# ============================================================
-# DASHBOARD
-# ============================================================
 
-@app.route("/")
-def dashboard():
+@app.get(
+    "/",
+    response_class=HTMLResponse
+)
+def dashboard(request: Request):
 
     df = get_analyzed_payments()
 
-    # --------------------------------------------------------
-    # Basic statistics
-    # --------------------------------------------------------
-
     total_transactions = len(df)
 
-    # Existing statistical anomalies
     amount_anomalies = 0
 
     if "amount_anomaly" in df.columns:
+
         amount_anomalies = int(
             df["amount_anomaly"]
             .fillna(False)
             .sum()
         )
 
-    # --------------------------------------------------------
-    # ML anomalies
-    # --------------------------------------------------------
-
     ml_anomalies = 0
 
     if "ml_anomaly" in df.columns:
+
         ml_anomalies = int(
             df["ml_anomaly"]
             .fillna(False)
             .sum()
         )
-
-    # --------------------------------------------------------
-    # Risk levels
-    # --------------------------------------------------------
 
     high_risk = 0
     medium_risk = 0
@@ -131,10 +122,6 @@ def dashboard():
             (df["risk_level"] == "LOW").sum()
         )
 
-    # --------------------------------------------------------
-    # Total flagged transactions
-    # --------------------------------------------------------
-
     flagged_transactions = 0
 
     if "anomaly_score" in df.columns:
@@ -143,30 +130,26 @@ def dashboard():
             (df["anomaly_score"] > 0).sum()
         )
 
-    return render_template(
+    return templates.TemplateResponse(
         "dashboard.html",
-
-        total_transactions=total_transactions,
-
-        total_anomalies=amount_anomalies,
-
-        ml_anomalies=ml_anomalies,
-
-        flagged_transactions=flagged_transactions,
-
-        high_risk=high_risk,
-
-        medium_risk=medium_risk,
-
-        low_risk=low_risk
+        {
+            "request": request,
+            "total_transactions": total_transactions,
+            "total_anomalies": amount_anomalies,
+            "ml_anomalies": ml_anomalies,
+            "flagged_transactions": flagged_transactions,
+            "high_risk": high_risk,
+            "medium_risk": medium_risk,
+            "low_risk": low_risk
+        }
     )
 
-# ============================================================
-# TRANSACTIONS
-# ============================================================
 
-@app.route("/transactions")
-def transactions():
+@app.get(
+    "/transactions",
+    response_class=HTMLResponse
+)
+def transactions(request: Request):
 
     df = get_analyzed_payments()
 
@@ -174,92 +157,22 @@ def transactions():
         orient="records"
     )
 
-    return render_template(
+    return templates.TemplateResponse(
         "transactions.html",
-        transactions=transactions_data
+        {
+            "request": request,
+            "transactions": transactions_data
+        }
     )
 
 
-# ============================================================
-# INVESTIGATION WORKSPACE
-# ============================================================
-
-@app.route(
-    "/investigation/<transaction_id>"
+@app.get(
+    "/investigation/{transaction_id}",
+    response_class=HTMLResponse
 )
-def investigation(transaction_id):
-
-    df = get_analyzed_payments()
-
-    matching = df[
-        df["id"].astype(str)
-        == str(transaction_id)
-    ]
-
-    if matching.empty:
-
-        abort(404)
-
-    transaction = (
-        matching.iloc[0].to_dict()
-    )
-
-
-    # --------------------------------------------------------
-    # Check whether an investigation already exists
-    # --------------------------------------------------------
-
-    existing_investigation = None
-
-
-    # Search existing investigation records
-    # using the transaction ID.
-
-    from investigation_database import (
-        get_investigation_by_transaction
-    )
-
-    existing_investigation = (
-        get_investigation_by_transaction(
-            transaction_id
-        )
-    )
-
-
-    evidence = []
-
-    if existing_investigation:
-
-        evidence = get_investigation_evidence(
-            existing_investigation[
-                "investigation_id"
-            ]
-        )
-
-
-    return render_template(
-
-        "investigation.html",
-
-        transaction=transaction,
-
-        investigation=
-            existing_investigation,
-
-        evidence=evidence
-    )
-
-
-# ============================================================
-# CREATE INVESTIGATION
-# ============================================================
-
-@app.route(
-    "/investigation/<transaction_id>/create",
-    methods=["POST"]
-)
-def create_investigation_route(
-    transaction_id
+def investigation(
+    request: Request,
+    transaction_id: str
 ):
 
     df = get_analyzed_payments()
@@ -271,46 +184,78 @@ def create_investigation_route(
 
     if matching.empty:
 
-        abort(404)
+        raise HTTPException(
+            status_code=404,
+            detail="Transaction not found"
+        )
 
     transaction = (
         matching.iloc[0].to_dict()
     )
 
-
-    # --------------------------------------------------------
-    # Create investigation object
-    # --------------------------------------------------------
-
-    investigation = build_investigation(
-
-        transaction,
-
-        investigator=request.form.get(
-            "investigator",
-            "Investigator 1"
-        ),
-
-        priority=request.form.get(
-            "priority",
-            "Medium"
+    existing_investigation = (
+        get_investigation_by_transaction(
+            transaction_id
         )
     )
 
+    evidence = []
 
-    # --------------------------------------------------------
-    # Save investigation
-    # --------------------------------------------------------
+    if existing_investigation:
+
+        evidence = get_investigation_evidence(
+            existing_investigation[
+                "investigation_id"
+            ]
+        )
+
+    return templates.TemplateResponse(
+        "investigation.html",
+        {
+            "request": request,
+            "transaction": transaction,
+            "investigation": existing_investigation,
+            "evidence": evidence
+        }
+    )
+
+
+@app.post(
+    "/investigation/{transaction_id}/create"
+)
+def create_investigation_route(
+    transaction_id: str,
+    investigator: str = Form("Investigator 1"),
+    priority: str = Form("Medium")
+):
+
+    df = get_analyzed_payments()
+
+    matching = df[
+        df["id"].astype(str)
+        == str(transaction_id)
+    ]
+
+    if matching.empty:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Transaction not found"
+        )
+
+    transaction = (
+        matching.iloc[0].to_dict()
+    )
+
+    investigation = build_investigation(
+        transaction,
+        investigator=investigator,
+        priority=priority
+    )
 
     investigation_id = save_investigation(
         investigation
     )
-
-
-    # --------------------------------------------------------
-    # Save evidence generated from
-    # anomaly analysis
-    # --------------------------------------------------------
 
     if investigation.get(
         "anomaly_reasons"
@@ -342,31 +287,19 @@ def create_investigation_route(
                 [evidence]
             )
 
-
-    return redirect(
-        url_for(
-            "investigation",
-            transaction_id=transaction_id
-        )
+    return RedirectResponse(
+        url=f"/investigation/{transaction_id}",
+        status_code=303
     )
 
 
-# ============================================================
-# ADD INVESTIGATION NOTE
-# ============================================================
-
-@app.route(
-    "/investigation/<transaction_id>/note",
-    methods=["POST"]
+@app.post(
+    "/investigation/{transaction_id}/note"
 )
 def add_note_route(
-    transaction_id
+    transaction_id: str,
+    note: str = Form("")
 ):
-
-    from investigation_database import (
-        get_investigation_by_transaction,
-        update_investigation
-    )
 
     investigation = (
         get_investigation_by_transaction(
@@ -376,14 +309,10 @@ def add_note_route(
 
     if investigation is None:
 
-        abort(404)
-
-
-    note = request.form.get(
-        "note",
-        ""
-    )
-
+        raise HTTPException(
+            status_code=404,
+            detail="Investigation not found"
+        )
 
     if note.strip():
 
@@ -396,31 +325,19 @@ def add_note_route(
             investigation
         )
 
-
-    return redirect(
-        url_for(
-            "investigation",
-            transaction_id=transaction_id
-        )
+    return RedirectResponse(
+        url=f"/investigation/{transaction_id}",
+        status_code=303
     )
 
 
-# ============================================================
-# UPDATE STATUS
-# ============================================================
-
-@app.route(
-    "/investigation/<transaction_id>/status",
-    methods=["POST"]
+@app.post(
+    "/investigation/{transaction_id}/status"
 )
 def update_status_route(
-    transaction_id
+    transaction_id: str,
+    status: str = Form(...)
 ):
-
-    from investigation_database import (
-        get_investigation_by_transaction,
-        update_investigation
-    )
 
     investigation = (
         get_investigation_by_transaction(
@@ -430,21 +347,16 @@ def update_status_route(
 
     if investigation is None:
 
-        abort(404)
-
-
-    new_status = request.form.get(
-        "status"
-    )
-
+        raise HTTPException(
+            status_code=404,
+            detail="Investigation not found"
+        )
 
     try:
 
-        investigation = (
-            update_investigation_status(
-                investigation,
-                new_status
-            )
+        investigation = update_investigation_status(
+            investigation,
+            status
         )
 
         update_investigation(
@@ -453,33 +365,26 @@ def update_status_route(
 
     except ValueError as error:
 
-        return str(error), 400
-
-
-    return redirect(
-        url_for(
-            "investigation",
-            transaction_id=transaction_id
+        raise HTTPException(
+            status_code=400,
+            detail=str(error)
         )
+
+    return RedirectResponse(
+        url=f"/investigation/{transaction_id}",
+        status_code=303
     )
 
 
-# ============================================================
-# ADD EVIDENCE
-# ============================================================
-
-@app.route(
-    "/investigation/<transaction_id>/evidence",
-    methods=["POST"]
+@app.post(
+    "/investigation/{transaction_id}/evidence"
 )
 def add_evidence_route(
-    transaction_id
+    transaction_id: str,
+    evidence_type: str = Form("Observation"),
+    description: str = Form(""),
+    reference: str = Form("")
 ):
-
-    from investigation_database import (
-        get_investigation_by_transaction,
-        update_investigation
-    )
 
     investigation = (
         get_investigation_by_transaction(
@@ -489,37 +394,21 @@ def add_evidence_route(
 
     if investigation is None:
 
-        abort(404)
-
-
-    evidence = add_evidence(
-
-        investigation,
-
-        evidence_type=request.form.get(
-            "evidence_type",
-            "Observation"
-        ),
-
-        description=request.form.get(
-            "description",
-            ""
-        ),
-
-        reference=request.form.get(
-            "reference",
-            ""
+        raise HTTPException(
+            status_code=404,
+            detail="Investigation not found"
         )
+
+    investigation = add_evidence(
+        investigation,
+        evidence_type=evidence_type,
+        description=description,
+        reference=reference
     )
-
-
-    # The manager returns the investigation
-    # containing the new evidence.
 
     new_evidence = (
-        evidence["evidence"][-1]
+        investigation["evidence"][-1]
     )
-
 
     save_all_evidence(
         investigation[
@@ -528,36 +417,23 @@ def add_evidence_route(
         [new_evidence]
     )
 
-
     update_investigation(
         investigation
     )
 
-
-    return redirect(
-        url_for(
-            "investigation",
-            transaction_id=transaction_id
-        )
+    return RedirectResponse(
+        url=f"/investigation/{transaction_id}",
+        status_code=303
     )
 
 
-# ============================================================
-# SET OUTCOME
-# ============================================================
-
-@app.route(
-    "/investigation/<transaction_id>/outcome",
-    methods=["POST"]
+@app.post(
+    "/investigation/{transaction_id}/outcome"
 )
 def set_outcome_route(
-    transaction_id
+    transaction_id: str,
+    outcome: str = Form(...)
 ):
-
-    from investigation_database import (
-        get_investigation_by_transaction,
-        update_investigation
-    )
 
     investigation = (
         get_investigation_by_transaction(
@@ -567,21 +443,16 @@ def set_outcome_route(
 
     if investigation is None:
 
-        abort(404)
-
-
-    outcome = request.form.get(
-        "outcome"
-    )
-
+        raise HTTPException(
+            status_code=404,
+            detail="Investigation not found"
+        )
 
     try:
 
-        investigation = (
-            set_investigation_outcome(
-                investigation,
-                outcome
-            )
+        investigation = set_investigation_outcome(
+            investigation,
+            outcome
         )
 
         update_investigation(
@@ -590,29 +461,30 @@ def set_outcome_route(
 
     except ValueError as error:
 
-        return str(error), 400
+        raise HTTPException(
+            status_code=400,
+            detail=str(error)
+        )
+
+    return RedirectResponse(
+        url=f"/investigation/{transaction_id}",
+        status_code=303
+    )
 
 
-    return redirect(
-        url_for(
-            "investigation",
-            transaction_id=transaction_id
+if __name__ == "__main__":
+
+    import uvicorn
+
+    port = int(
+        os.environ.get(
+            "PORT",
+            5000
         )
     )
 
-
-# ============================================================
-# RUN APPLICATION
-# ============================================================
-
-import os
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-
-    app.run(
+    uvicorn.run(
+        app,
         host="0.0.0.0",
-        port=port,
-        debug=False
+        port=port
     )
-
