@@ -15,7 +15,7 @@ API_KEY = os.getenv("NOVA_API_KEY")
 
 if not API_KEY:
     raise RuntimeError(
-        "NOVA_API_KEY is not set in the .env file"
+        "NOVA_API_KEY environment variable is not configured."
     )
 
 
