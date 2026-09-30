@@ -600,16 +600,11 @@ def set_outcome_route(
         )
     )
 
-from flask import Flask
 
-app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return "Application is running"
 # ============================================================
 # RUN APPLICATION
 # ============================================================
+
 import os
 
 if __name__ == "__main__":
