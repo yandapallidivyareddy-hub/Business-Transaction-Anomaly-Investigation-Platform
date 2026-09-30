@@ -1,7 +1,7 @@
 fastapi
 uvicorn[standard]
+jinja2
 pandas
 requests
 scikit-learn
 python-dotenv
-gunicorn
