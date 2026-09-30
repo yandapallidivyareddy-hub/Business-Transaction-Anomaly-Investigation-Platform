@@ -27,12 +27,27 @@ from investigation_database import (
 )
 
 
-# --------------------------------------------------
-# FASTAPI APPLICATION
-# --------------------------------------------------
-
 app = FastAPI(
     title="Business Transaction Anomaly Investigation Platform"
+)
+
+
+# --------------------------------------------------
+# PROJECT DIRECTORIES
+# --------------------------------------------------
+
+BASE_DIR = os.path.dirname(
+    os.path.abspath(__file__)
+)
+
+STATIC_DIR = os.path.join(
+    BASE_DIR,
+    "static"
+)
+
+TEMPLATES_DIR = os.path.join(
+    BASE_DIR,
+    "templates"
 )
 
 
@@ -41,7 +56,7 @@ app = FastAPI(
 # --------------------------------------------------
 
 templates = Jinja2Templates(
-    directory="templates"
+    directory=TEMPLATES_DIR
 )
 
 
@@ -51,7 +66,9 @@ templates = Jinja2Templates(
 
 app.mount(
     "/static",
-    StaticFiles(directory="static"),
+    StaticFiles(
+        directory=STATIC_DIR
+    ),
     name="static"
 )
 
