@@ -27,13 +27,27 @@ from investigation_database import (
 )
 
 
+# --------------------------------------------------
+# FASTAPI APPLICATION
+# --------------------------------------------------
+
 app = FastAPI(
     title="Business Transaction Anomaly Investigation Platform"
 )
 
+
+# --------------------------------------------------
+# TEMPLATES
+# --------------------------------------------------
+
 templates = Jinja2Templates(
     directory="templates"
 )
+
+
+# --------------------------------------------------
+# STATIC FILES
+# --------------------------------------------------
 
 app.mount(
     "/static",
@@ -41,8 +55,17 @@ app.mount(
     name="static"
 )
 
+
+# --------------------------------------------------
+# DATABASE INITIALIZATION
+# --------------------------------------------------
+
 initialize_investigation_database()
 
+
+# --------------------------------------------------
+# ANALYZE PAYMENTS
+# --------------------------------------------------
 
 def get_analyzed_payments():
 
@@ -66,6 +89,10 @@ def get_analyzed_payments():
     return df
 
 
+# --------------------------------------------------
+# DASHBOARD
+# --------------------------------------------------
+
 @app.get(
     "/",
     response_class=HTMLResponse,
@@ -77,23 +104,37 @@ def dashboard(request: Request):
 
     total_transactions = len(df)
 
+    # ----------------------------------------------
+    # Amount anomalies
+    # ----------------------------------------------
+
     amount_anomalies = 0
 
     if "amount_anomaly" in df.columns:
+
         amount_anomalies = int(
             df["amount_anomaly"]
             .fillna(False)
             .sum()
         )
 
+    # ----------------------------------------------
+    # ML anomalies
+    # ----------------------------------------------
+
     ml_anomalies = 0
 
     if "ml_anomaly" in df.columns:
+
         ml_anomalies = int(
             df["ml_anomaly"]
             .fillna(False)
             .sum()
         )
+
+    # ----------------------------------------------
+    # Risk levels
+    # ----------------------------------------------
 
     high_risk = 0
     medium_risk = 0
@@ -113,14 +154,24 @@ def dashboard(request: Request):
             (df["risk_level"] == "LOW").sum()
         )
 
+    # ----------------------------------------------
+    # Flagged transactions
+    # ----------------------------------------------
+
     flagged_transactions = 0
 
     if "anomaly_score" in df.columns:
+
         flagged_transactions = int(
             (df["anomaly_score"] > 0).sum()
         )
 
+    # ----------------------------------------------
+    # Render dashboard
+    # ----------------------------------------------
+
     return templates.TemplateResponse(
+        request,
         "dashboard.html",
         {
             "request": request,
@@ -134,6 +185,10 @@ def dashboard(request: Request):
         }
     )
 
+
+# --------------------------------------------------
+# TRANSACTIONS
+# --------------------------------------------------
 
 @app.get(
     "/transactions",
@@ -149,6 +204,7 @@ def transactions(request: Request):
     )
 
     return templates.TemplateResponse(
+        request,
         "transactions.html",
         {
             "request": request,
@@ -156,6 +212,10 @@ def transactions(request: Request):
         }
     )
 
+
+# --------------------------------------------------
+# INVESTIGATION DETAILS
+# --------------------------------------------------
 
 @app.get(
     "/investigation/{transaction_id}",
@@ -175,6 +235,7 @@ def investigation(
     ]
 
     if matching.empty:
+
         raise HTTPException(
             status_code=404,
             detail="Transaction not found"
@@ -199,6 +260,7 @@ def investigation(
         )
 
     return templates.TemplateResponse(
+        request,
         "investigation.html",
         {
             "request": request,
@@ -208,6 +270,10 @@ def investigation(
         }
     )
 
+
+# --------------------------------------------------
+# CREATE INVESTIGATION
+# --------------------------------------------------
 
 @app.post(
     "/investigation/{transaction_id}/create"
@@ -226,6 +292,7 @@ def create_investigation_route(
     ]
 
     if matching.empty:
+
         raise HTTPException(
             status_code=404,
             detail="Transaction not found"
@@ -267,6 +334,10 @@ def create_investigation_route(
     )
 
 
+# --------------------------------------------------
+# ADD INVESTIGATION NOTE
+# --------------------------------------------------
+
 @app.post(
     "/investigation/{transaction_id}/note"
 )
@@ -282,6 +353,7 @@ def add_note_route(
     )
 
     if investigation is None:
+
         raise HTTPException(
             status_code=404,
             detail="Investigation not found"
@@ -304,6 +376,10 @@ def add_note_route(
     )
 
 
+# --------------------------------------------------
+# UPDATE INVESTIGATION STATUS
+# --------------------------------------------------
+
 @app.post(
     "/investigation/{transaction_id}/status"
 )
@@ -319,6 +395,7 @@ def update_status_route(
     )
 
     if investigation is None:
+
         raise HTTPException(
             status_code=404,
             detail="Investigation not found"
@@ -348,6 +425,10 @@ def update_status_route(
     )
 
 
+# --------------------------------------------------
+# ADD EVIDENCE
+# --------------------------------------------------
+
 @app.post(
     "/investigation/{transaction_id}/evidence"
 )
@@ -365,6 +446,7 @@ def add_evidence_route(
     )
 
     if investigation is None:
+
         raise HTTPException(
             status_code=404,
             detail="Investigation not found"
@@ -396,6 +478,10 @@ def add_evidence_route(
     )
 
 
+# --------------------------------------------------
+# SET INVESTIGATION OUTCOME
+# --------------------------------------------------
+
 @app.post(
     "/investigation/{transaction_id}/outcome"
 )
@@ -411,6 +497,7 @@ def set_outcome_route(
     )
 
     if investigation is None:
+
         raise HTTPException(
             status_code=404,
             detail="Investigation not found"
@@ -439,6 +526,10 @@ def set_outcome_route(
         status_code=303
     )
 
+
+# --------------------------------------------------
+# LOCAL DEVELOPMENT
+# --------------------------------------------------
 
 if __name__ == "__main__":
 
