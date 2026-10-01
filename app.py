@@ -6,6 +6,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
+
 from data_loader import get_payments
 from data_processor import payments_to_dataframe, clean_payments
 from anomaly_engine import analyze_transactions
@@ -51,16 +52,16 @@ app = FastAPI(
 # STATIC FILES
 # =========================================================
 
-# Make sure the static directory exists
 STATIC_DIR.mkdir(
     parents=True,
     exist_ok=True
 )
 
-# Mount CSS, JavaScript and other static files
 app.mount(
     "/static",
-    StaticFiles(directory=str(STATIC_DIR)),
+    StaticFiles(
+        directory=str(STATIC_DIR)
+    ),
     name="static"
 )
 
