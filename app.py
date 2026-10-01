@@ -1,13 +1,10 @@
+import os
+from pathlib import Path
+
 from fastapi import FastAPI, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-
-app = FastAPI()
-
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-templates = Jinja2Templates(directory="templates")
 
 from data_loader import get_payments
 from data_processor import payments_to_dataframe, clean_payments
@@ -51,29 +48,29 @@ app = FastAPI(
 
 
 # =========================================================
-# TEMPLATES
-# =========================================================
-
-templates = Jinja2Templates(
-    directory=str(TEMPLATES_DIR)
-)
-
-
-# =========================================================
 # STATIC FILES
 # =========================================================
 
-# Make sure the static directory exists.
+# Make sure the static directory exists
 STATIC_DIR.mkdir(
     parents=True,
     exist_ok=True
 )
 
-# Mount CSS, JavaScript and other static files.
+# Mount CSS, JavaScript and other static files
 app.mount(
     "/static",
     StaticFiles(directory=str(STATIC_DIR)),
     name="static"
+)
+
+
+# =========================================================
+# TEMPLATES
+# =========================================================
+
+templates = Jinja2Templates(
+    directory=str(TEMPLATES_DIR)
 )
 
 
@@ -663,7 +660,7 @@ if __name__ == "__main__":
     port = int(
         os.environ.get(
             "PORT",
-            5000
+            8000
         )
     )
 
@@ -673,4 +670,3 @@ if __name__ == "__main__":
         port=port,
         reload=False
     )
-
