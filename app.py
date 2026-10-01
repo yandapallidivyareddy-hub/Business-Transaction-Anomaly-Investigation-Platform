@@ -1,11 +1,13 @@
-
-import os
-from pathlib import Path
-
 from fastapi import FastAPI, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+
+app = FastAPI()
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+templates = Jinja2Templates(directory="templates")
 
 from data_loader import get_payments
 from data_processor import payments_to_dataframe, clean_payments
