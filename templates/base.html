@@ -1,197 +1,208 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+```
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-    <title>
-        FIN-41 | Transaction Investigation Platform
-    </title>
+<title>FIN-41 | Transaction Investigation Platform</title>
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='style.css') }}"
-    >
+<!-- Static CSS -->
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', path='style.css') }}"
+>
+```
+
 </head>
 
 <body>
 
 <div class="app-layout">
 
-    <!-- =====================================================
-         SIDEBAR
-    ====================================================== -->
+```
+<!-- =====================================================
+     SIDEBAR
+====================================================== -->
 
-    <aside class="sidebar">
+<aside class="sidebar">
 
-        <div class="sidebar-brand">
+    <div class="sidebar-brand">
 
-            <div class="brand-mark">
-                FIN
-            </div>
-
-            <div class="brand-text">
-
-                <strong>
-                    FIN-41
-                </strong>
-
-                <span>
-                    Investigation Platform
-                </span>
-
-            </div>
-
+        <div class="brand-mark">
+            FIN
         </div>
 
+        <div class="brand-text">
 
-        <nav class="sidebar-nav">
+            <strong>
+                FIN-41
+            </strong>
 
-            <div class="nav-section-title">
-                MONITORING
-            </div>
-
-            <a
-                href="{{ url_for('dashboard') }}"
-                class="sidebar-link"
-            >
-                <span class="nav-icon">D</span>
-                <span>Dashboard</span>
-            </a>
-
-
-            <a
-                href="{{ url_for('transactions') }}"
-                class="sidebar-link"
-            >
-                <span class="nav-icon">T</span>
-                <span>Transactions</span>
-            </a>
-
-
-            <div class="nav-section-title">
-                INVESTIGATION
-            </div>
-
-            <a
-                href="{{ url_for('transactions') }}"
-                class="sidebar-link"
-            >
-                <span class="nav-icon">A</span>
-                <span>Anomalies</span>
-            </a>
-
-
-            <a
-                href="{{ url_for('transactions') }}"
-                class="sidebar-link"
-            >
-                <span class="nav-icon">I</span>
-                <span>Investigations</span>
-            </a>
-
-
-            <div class="nav-section-title">
-                DATA
-            </div>
-
-            <a
-                href="{{ url_for('transactions') }}"
-                class="sidebar-link"
-            >
-                <span class="nav-icon">DB</span>
-                <span>Data Explorer</span>
-            </a>
-
-        </nav>
-
-
-        <!-- System status -->
-
-        <div class="sidebar-status">
-
-            <div class="status-indicator">
-                <span class="status-dot"></span>
-
-                <span>
-                    System Active
-                </span>
-            </div>
-
-            <small>
-                Transaction monitoring enabled
-            </small>
+            <span>
+                Investigation Platform
+            </span>
 
         </div>
-
-    </aside>
-
-
-    <!-- =====================================================
-         MAIN APPLICATION
-    ====================================================== -->
-
-    <div class="main-area">
-
-        <!-- Top bar -->
-
-        <header class="topbar">
-
-            <div class="topbar-title">
-
-                <span class="topbar-label">
-                    FINANCIAL MONITORING
-                </span>
-
-                <span class="topbar-divider">
-                    /
-                </span>
-
-                <span>
-                    Investigation Platform
-                </span>
-
-            </div>
-
-
-            <div class="topbar-status">
-
-                <span class="status-dot"></span>
-
-                <span>
-                    Monitoring Active
-                </span>
-
-            </div>
-
-        </header>
-
-
-        <!-- Page content -->
-
-        <main class="main-container">
-
-            {% block content %}
-            {% endblock %}
-
-        </main>
 
     </div>
 
+
+    <nav class="sidebar-nav">
+
+        <div class="nav-section-title">
+            MONITORING
+        </div>
+
+        <a
+            href="{{ url_for('dashboard') }}"
+            class="sidebar-link"
+        >
+            <span class="nav-icon">D</span>
+            <span>Dashboard</span>
+        </a>
+
+
+        <a
+            href="{{ url_for('transactions') }}"
+            class="sidebar-link"
+        >
+            <span class="nav-icon">T</span>
+            <span>Transactions</span>
+        </a>
+
+
+        <div class="nav-section-title">
+            INVESTIGATION
+        </div>
+
+
+        <a
+            href="{{ url_for('transactions') }}"
+            class="sidebar-link"
+        >
+            <span class="nav-icon">A</span>
+            <span>Anomalies</span>
+        </a>
+
+
+        <a
+            href="{{ url_for('transactions') }}"
+            class="sidebar-link"
+        >
+            <span class="nav-icon">I</span>
+            <span>Investigations</span>
+        </a>
+
+
+        <div class="nav-section-title">
+            DATA
+        </div>
+
+
+        <a
+            href="{{ url_for('transactions') }}"
+            class="sidebar-link"
+        >
+            <span class="nav-icon">DB</span>
+            <span>Data Explorer</span>
+        </a>
+
+    </nav>
+
+
+    <!-- System status -->
+
+    <div class="sidebar-status">
+
+        <div class="status-indicator">
+
+            <span class="status-dot"></span>
+
+            <span>
+                System Active
+            </span>
+
+        </div>
+
+        <small>
+            Transaction monitoring enabled
+        </small>
+
+    </div>
+
+</aside>
+
+
+<!-- =====================================================
+     MAIN APPLICATION
+====================================================== -->
+
+<div class="main-area">
+
+    <!-- Top bar -->
+
+    <header class="topbar">
+
+        <div class="topbar-title">
+
+            <span class="topbar-label">
+                FINANCIAL MONITORING
+            </span>
+
+            <span class="topbar-divider">
+                /
+            </span>
+
+            <span>
+                Investigation Platform
+            </span>
+
+        </div>
+
+
+        <div class="topbar-status">
+
+            <span class="status-dot"></span>
+
+            <span>
+                Monitoring Active
+            </span>
+
+        </div>
+
+    </header>
+
+
+    <!-- Page content -->
+
+    <main class="main-container">
+
+        {% block content %}
+        {% endblock %}
+
+    </main>
+
+</div>
+```
+
 </div>
 
+<!-- Static JavaScript -->
 
 <script
-    src="{{ url_for('static', filename='script.js') }}"
+    src="{{ url_for('static', path='script.js') }}"
 ></script>
 
 </body>
 
 </html>
+
 
 
